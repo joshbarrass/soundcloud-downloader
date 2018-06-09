@@ -10,10 +10,11 @@ except ImportError:
     from distutils.core import setup
 
 if sys.argv[-1] == 'publish':
-    os.system('python setup.py sdist upload')
+    os.system('python setup.py sdist')
+    os.system('twine upload dist/*')
     sys.exit()
 
-with codecs.open('README.md') as file:
+with codecs.open('README.rst') as file:
     long_description = file.read()
     if not isinstance(long_description, str):
         long_description = str(long_description, 'utf-8')
@@ -21,7 +22,7 @@ with codecs.open('README.md') as file:
 
 setup(
     name='sc_downloader',
-    version='0.1.0',
+    version='0.1.1',
     description='Downloads music from Soundcloud.',
     long_description=long_description,
     author='WORD559',
