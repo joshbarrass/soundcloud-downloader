@@ -1,0 +1,33 @@
+#!/usr/bin/env python2
+
+from docopt import docopt
+
+from soundcloud import version, Soundcloud
+
+__doc__ = """soundcloud-dl.
+
+Downloads music from Soundcloud. This program is not affliated
+with Soundcloud!
+
+Usage:
+  soundcloud-dl -p <url> [-d directory]
+  soundcloud-dl -h | --help
+  soundcloud-dl -V | --version
+
+Options:
+  -d --directory                 Directory to download to. By default downloads to 'soundcloud'.
+  -p --playlist=<url>                  Downloads a playlist to directory. By default downloads to directory 'soundcloud'.
+  -h --help                      Show help
+  -V --version                   Show version
+"""
+
+if __name__ == "__main__":
+    args = docopt(__doc__, version="soundcloud-dl {}".format(version))
+    sc = Soundcloud()
+    
+    if args["--playlist"]:
+        if not args["--directory"]:
+            directory = "soundcloud"
+        else:
+            directory = args["--directory"]
+        sc.get_playlist(args["--playlist"],directory)
