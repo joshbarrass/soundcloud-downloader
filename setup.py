@@ -22,7 +22,7 @@ with codecs.open('README.rst') as file:
 
 setup(
     name='sc_downloader',
-    version='0.1.1',
+    version='0.1.5',
     description='Downloads music from Soundcloud.',
     long_description=long_description,
     author='WORD559',

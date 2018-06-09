@@ -3,7 +3,7 @@
 import requests
 import os, sys
 
-version = "0.1.0"
+version = "0.1.5"
 
 class Track(object):
     def __init__(self,json):
@@ -42,6 +42,11 @@ class Soundcloud(object):
         self.s.headers["User-Agent"] = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0"
         self.s.get(self.BASEURL)
 
+    def normalise_dir(self,directory):
+        directory = directory.rstrip("/")
+        directory = directory.rstrip("\\")
+        directory = directory.replace("~",os.environ["HOME"])
+
     def get_track(self,ID):
         TRACK_URL = "{baseurl}/tracks/{ID}?client_id={client}"
         print "Getting track with ID {ID}...".format(ID=ID)
@@ -49,15 +54,21 @@ class Soundcloud(object):
         r.raise_for_status()
         return Track(r.json())
 
-    def get_playlist(self,url,directory=None):
+    def download_artwork(self,directory,track):
+        print "Downloading album artwork..."
+        r = self.s.get(track.artwork_url.format(client=self.CLIENT_ID),stream=True)
+        with open(directory+"/folder.jpg","wb") as output:
+            for block in r.iter_content(1024):
+                output.write(block)
+
+    def get_playlist(self,url,directory=None,artwork=False):
         PLAYLIST_URL = "{baseurl}/playlists/{playlist}?client_id={client}"
 
         if not isinstance(directory,str):
             download = False
         else:
             download = True
-            directory = directory.rstrip("/")
-            directory = directory.rstrip("\\")
+            
         
         print "Connecting to {url}...".format(url=url)
         r = self.s.get(url)
@@ -81,7 +92,7 @@ class Soundcloud(object):
         r.raise_for_status()
         playlist_json = r.json()
         print "\nGot playlist information!"
-        print """  Title: {title}
+        print u"""  Title: {title}
   Genre: {genre}
   Created At: {created}
   Created By: {author}
@@ -111,13 +122,15 @@ class Soundcloud(object):
                 try:
                     r.raise_for_status()
                 except:
-                    print "Error: Unable to download track {n}.".format(n=i+1)
+                    print "Error: Unable to download track {n}.".format(n=i+1)  
                     continue
 
                 with open(directory+"/{no} - {track}.mp3".format(no=i+1,track=track.title),"wb") as output:
                     for block in r.iter_content(1024):
                         output.write(block)
                 print "Downloaded track {n}".format(n=i+1)
+            if artwork:
+                self.download_artwork(directory,tracks[0])
         
 
         

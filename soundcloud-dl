@@ -10,13 +10,14 @@ Downloads music from Soundcloud. This program is not affliated
 with Soundcloud!
 
 Usage:
-  soundcloud-dl -p <url> [-d directory]
+  soundcloud-dl -p <url> [options]
   soundcloud-dl -h | --help
   soundcloud-dl -V | --version
 
 Options:
-  -d --directory                 Directory to download to. By default downloads to 'soundcloud'.
-  -p --playlist=<url>                  Downloads a playlist to directory. By default downloads to directory 'soundcloud'.
+  -d --directory=<dir>           Directory to download to. By default downloads to 'soundcloud'.
+  -a --artwork                   Downloads album artwork as folder.jpg (only from the first song in the playlist)
+  -p --playlist=<url>            Downloads a playlist to directory. By default downloads to directory 'soundcloud'.
   -h --help                      Show help
   -V --version                   Show version
 """
@@ -30,4 +31,4 @@ if __name__ == "__main__":
             directory = "soundcloud"
         else:
             directory = args["--directory"]
-        sc.get_playlist(args["--playlist"],directory)
+        sc.get_playlist(args["--playlist"],directory,args["--artwork"])

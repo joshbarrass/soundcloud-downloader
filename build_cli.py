@@ -23,7 +23,7 @@ options = {
 
 setup(
     name='sc_downloader',
-    version='0.1.0',
+    version='0.1.5',
     description='Downloads music from Soundcloud.',
     options=options,
     executables=[Executable('soundcloud-dl')],
