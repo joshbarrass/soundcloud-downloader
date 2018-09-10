@@ -26,6 +26,9 @@ Options:
   -V --version                   Show version
 """
 
+def expandall(path):
+    return os.path.expandvars(os.path.expanduser(path))
+
 if __name__ == "__main__":
     args = docopt(__doc__, version="soundcloud-dl {}".format(version))
     sc = Soundcloud()
@@ -34,12 +37,12 @@ if __name__ == "__main__":
         if not args["--directory"]:
             directory = "soundcloud"
         else:
-            directory = args["--directory"]
+            directory = expandall(args["--directory"])
         sc.download_playlist(args["--playlist"],directory,args["--artwork"])
 
     if args["--track"]:
         if not args["--directory"]:
             directory = os.getcwd()
         else:
-            directory = args["--directory"]
+            directory = expandall(args["--directory"])
         sc.download_track(args["--track"],directory,args["--artwork"])
