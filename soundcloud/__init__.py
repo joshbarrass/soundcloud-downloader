@@ -3,7 +3,7 @@
 import requests
 import os, sys
 
-version = "0.2.1"
+version = "0.3.0"
 
 class Track(object):
     def __init__(self,json):
