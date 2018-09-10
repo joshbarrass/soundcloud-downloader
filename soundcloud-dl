@@ -4,12 +4,15 @@ from docopt import docopt
 
 from soundcloud import version, Soundcloud
 
+import os
+
 __doc__ = """soundcloud-dl.
 
 Downloads music from Soundcloud. This program is not affliated
 with Soundcloud!
 
 Usage:
+  soundcloud-dl -t <url> [options]
   soundcloud-dl -p <url> [options]
   soundcloud-dl -h | --help
   soundcloud-dl -V | --version
@@ -17,6 +20,7 @@ Usage:
 Options:
   -d --directory=<dir>           Directory to download to. By default downloads to 'soundcloud'.
   -a --artwork                   Downloads album artwork as folder.jpg (only from the first song in the playlist)
+  -t --track=<url>               Downloads a single track to directory. By default downloads to directory '.'
   -p --playlist=<url>            Downloads a playlist to directory. By default downloads to directory 'soundcloud'.
   -h --help                      Show help
   -V --version                   Show version
@@ -31,4 +35,11 @@ if __name__ == "__main__":
             directory = "soundcloud"
         else:
             directory = args["--directory"]
-        sc.get_playlist(args["--playlist"],directory,args["--artwork"])
+        sc.download_playlist(args["--playlist"],directory,args["--artwork"])
+
+    if args["--track"]:
+        if not args["--directory"]:
+            directory = os.getcwd()
+        else:
+            directory = args["--directory"]
+        sc.download_track(args["--track"],directory,args["--artwork"])

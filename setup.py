@@ -3,6 +3,7 @@
 import codecs
 import os
 import sys
+from soundcloud import version as VERSION
 
 try:
     from setuptools import setup
@@ -22,7 +23,7 @@ with codecs.open('README.rst') as file:
 
 setup(
     name='sc_downloader',
-    version='0.1.5',
+    version=VERSION,
     description='Downloads music from Soundcloud.',
     long_description=long_description,
     author='WORD559',

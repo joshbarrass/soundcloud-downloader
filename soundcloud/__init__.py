@@ -3,7 +3,7 @@
 import requests
 import os, sys
 
-version = "0.1.5"
+version = "0.2.1"
 
 class Track(object):
     def __init__(self,json):
@@ -57,11 +57,11 @@ class Soundcloud(object):
     def download_artwork(self,directory,track):
         print "Downloading album artwork..."
         r = self.s.get(track.artwork_url.format(client=self.CLIENT_ID),stream=True)
-        with open(directory+"/folder.jpg","wb") as output:
+        with open(os.path.join(directory,"folder.jpg"),"wb") as output:
             for block in r.iter_content(1024):
                 output.write(block)
 
-    def get_playlist(self,url,directory=None,artwork=False):
+    def download_playlist(self,url,directory=None,artwork=False):
         PLAYLIST_URL = "{baseurl}/playlists/{playlist}?client_id={client}"
 
         if not isinstance(directory,str):
@@ -125,12 +125,72 @@ class Soundcloud(object):
                     print "Error: Unable to download track {n}.".format(n=i+1)  
                     continue
 
-                with open(directory+"/{no} - {track}.mp3".format(no=i+1,track=track.title),"wb") as output:
+                with open(os.path.join(directory,u"{no} - {track}.mp3".format(no=i+1,track=track.title)),"wb") as output:
                     for block in r.iter_content(1024):
                         output.write(block)
                 print "Downloaded track {n}".format(n=i+1)
             if artwork:
                 self.download_artwork(directory,tracks[0])
-        
 
+    def download_track(self,url,directory=".",artwork=False):
+        TRACK_URL = "{baseurl}/tracks/{track}?client_id={client}"
+
+        if not isinstance(directory,str):
+            download = False
+        else:
+            download = True
+            
         
+        print "Connecting to {url}...".format(url=url)
+        r = self.s.get(url)
+        r.raise_for_status()
+        print "Connected! Extracting track ID..."
+        # Extract ID from iOS URI
+        if '<meta property="al:ios:url"' not in r.content:
+            raise ValueError("Can't find iOS URL to derive playlist from.")
+        
+        index = r.content.index('<meta property="al:ios:url"')
+        closing_index = r.content[index:].index(">")
+        uri_tag = r.content[index:index+closing_index+1]
+
+        index = uri_tag.index("sounds:")
+        closing_index = uri_tag[index+7:].index("\"")
+        track_id = uri_tag[index+7:index+7+closing_index]
+        print "Found track ID: {ID}".format(ID=track_id)
+
+        print "Getting track information..."
+        r = self.s.get(TRACK_URL.format(baseurl=self.APIURL,track=track_id,client=self.CLIENT_ID))
+        r.raise_for_status()
+        track_json = r.json()
+        print "\nGot playlist information!"
+        print u"""  Title: {title}
+  Genre: {genre}
+  Created At: {created}
+  Created By: {author}""".format(title=track_json["title"],genre=track_json["genre"],created=track_json["created_at"],author=track_json["user"]["full_name"])
+        if download:
+            if not os.path.isdir(directory):
+                print "\nMaking directory '{dire}'".format(dire=directory)
+                try:
+                    os.mkdir(directory)
+                except:
+                    print "Failed to make directory!"
+                    return
+            print "\nFetching track..."
+            track = self.get_track(track_json["id"])
+            print "Fetched track."
+            if track.downloadable:
+                url = track.download_url.format(client=self.CLIENT_ID)
+            else:
+                url = track.stream_url.format(client=self.CLIENT_ID)
+            r = self.s.get(url, stream=True)
+            try:
+                r.raise_for_status()
+            except:
+                print "Error: Unable to download track."
+                return
+            with open(os.path.join(directory,u"{track}.mp3".format(track=track.title)),"wb") as output:
+                for block in r.iter_content(1024):
+                    output.write(block)
+            print "Downloaded track."
+            if artwork:
+                self.download_artwork(directory,track)

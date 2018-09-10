@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 from cx_Freeze import setup, Executable
+from soundcloud import version as VERSION
 
 options = {
     'build_exe': {
@@ -23,7 +24,7 @@ options = {
 
 setup(
     name='sc_downloader',
-    version='0.1.5',
+    version=VERSION,
     description='Downloads music from Soundcloud.',
     options=options,
     executables=[Executable('soundcloud-dl')],
