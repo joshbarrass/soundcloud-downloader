@@ -3,7 +3,7 @@
 import requests
 import os, sys
 
-version = "0.3.0"
+version = "0.3.4"
 
 class Track(object):
     def __init__(self,json):
@@ -13,6 +13,7 @@ class Track(object):
         self.title = json["title"]
         self.genre = json["genre"]
         self.artwork_url = json["artwork_url"]
+        self.big_artwork_url = json["artwork_url"].replace("-large.jpg", "-t500x500.jpg")
         self.downloadable = json["downloadable"]
         self.stream_url = json["stream_url"]
         if "?" in self.stream_url:
@@ -33,7 +34,7 @@ class Soundcloud(object):
     def __init__(self):
         # Client ID found by <script crossorigin src="https://a-v2.sndcdn.com/assets/app-8fdd2ad-f455fe7-3.js"></script>
         # Just making a note of that in case it changes
-        self.CLIENT_ID = "QyPi1UIiAXHektIfaZyKDQSp25ZaerWL"
+        self.CLIENT_ID = "yboSNKExXO4W4cTLIwqfJbUTCSyRIT3a"
         self.BASEURL = "https://www.soundcloud.com"
         self.APIURL = "https://api-v2.soundcloud.com"
         self.APIv1URL = "https://api.soundcloud.com"
@@ -50,10 +51,17 @@ class Soundcloud(object):
 
     def __download_artwork(self,directory,track):
         print "Downloading album artwork..."
-        r = self.s.get(track.artwork_url.format(client=self.CLIENT_ID),stream=True)
-        with open(os.path.join(directory,"folder.jpg"),"wb") as output:
-            for block in r.iter_content(1024):
-                output.write(block)
+        r = self.s.get(track.big_artwork_url.format(client=self.CLIENT_ID),stream=True)
+        if r.status_code != 200:
+            r = self.s.get(track.artwork_url.format(client=self.CLIENT_ID),stream=True)
+
+        if r.status_code == 200:
+            with open(os.path.join(directory,"folder.jpg"),"wb") as output:
+                for block in r.iter_content(1024):
+                    output.write(block)
+        else:
+            sys.stderr.write("Could not download artwork (status code "+str(r.status_code)+")")
+            sys.stderr.flush()
 
     def __download_track(self,directory,track,name_format):
         name_format = name_format.rstrip(".mp3") + ".mp3"
@@ -121,13 +129,11 @@ class Soundcloud(object):
             print "\nMaking directory '{dire}'".format(dire=directory)
             os.mkdir(directory)
 
-    def download_playlist(self,url,directory=None,artwork=False):
+    def download_playlist(self,url,directory=None,artwork=False,download=True):
         PLAYLIST_URL = "{baseurl}/playlists/{ID}?client_id={client}"
 
         if not isinstance(directory,str):
             download = False
-        else:
-            download = True
             
         ID = self.__get_id_from_url(url,"playlists")
         playlist_json = self.__get_json_object(ID,PLAYLIST_URL)
@@ -150,15 +156,13 @@ class Soundcloud(object):
                 print "Downloaded track {n}".format(n=i+1)
                 
         if artwork:
-            self.download_artwork(directory,tracks[0])
+            self.__download_artwork(directory,tracks[0])
 
-    def download_track(self,url,directory=None,artwork=False):
+    def download_track(self,url,directory=None,artwork=False,download=True):
         TRACK_URL = "{baseurl}/tracks/{ID}?client_id={client}"
 
         if not isinstance(directory,str):
             download = False
-        else:
-            download = True
             
         ID = self.__get_id_from_url(url,"sounds")
         track_json = self.__get_json_object(ID,TRACK_URL)
@@ -169,9 +173,9 @@ class Soundcloud(object):
             print "\nFetching track..."
             track = self.get_track(track_json["id"])
             print "Fetched track."
-            
+
             self.__download_track(directory,track,"{track}")
             print u"Downloaded track '{track}'.".format(track=track.title)
             
         if artwork:
-            self.download_artwork(directory,track)
+            self.__download_artwork(directory,track)

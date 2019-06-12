@@ -22,6 +22,7 @@ Options:
   -a --artwork                   Downloads album artwork as folder.jpg (only from the first song in the playlist)
   -t --track=<url>               Downloads a single track to directory. By default downloads to directory '.'
   -p --playlist=<url>            Downloads a playlist to directory. By default downloads to directory 'soundcloud'.
+  -an --no-audio                 Don't download the audio
   -h --help                      Show help
   -V --version                   Show version
 """
@@ -32,17 +33,27 @@ def expandall(path):
 if __name__ == "__main__":
     args = docopt(__doc__, version="soundcloud-dl {}".format(version))
     sc = Soundcloud()
+
+    download = True
+    if args["--no-audio"]:
+        download = False
     
     if args["--playlist"]:
         if not args["--directory"]:
             directory = "soundcloud"
         else:
             directory = expandall(args["--directory"])
-        sc.download_playlist(args["--playlist"],directory,args["--artwork"])
+        sc.download_playlist(args["--playlist"],
+                             directory,
+                             args["--artwork"],
+                             download=download)
 
     if args["--track"]:
         if not args["--directory"]:
             directory = os.getcwd()
         else:
             directory = expandall(args["--directory"])
-        sc.download_track(args["--track"],directory,args["--artwork"])
+        sc.download_track(args["--track"],
+                          directory,
+                          args["--artwork"],
+                          download=download)
